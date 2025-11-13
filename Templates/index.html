@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Graph Colouring Solver</title>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+@keyframes fadeIn {
+
+  from {
+
+    opacity: 0;
+
+    transform: translateY(30px);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform: translateY(0);
+
+  }
+
+}
+
+
+
+@keyframes pulseGlow {
+
+  0% {
+
+    box-shadow: 0 0 15px rgba(8, 82, 90, 0.5);
+
+  }
+
+  50% {
+
+    box-shadow: 0 0 30px rgb(0, 104, 174);
+
+  }
+
+  100% {
+
+    box-shadow: 0 0 15px rgba(0, 173, 192, 0.5);
+
+  }
+
+}
+
+
+
+@keyframes textStreamIn {
+
+  from {
+
+    opacity: 0;
+
+    transform: translateX(-10px);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform: translateX(0);
+
+  }
+
+}
+
+
+
+@keyframes spin {
+
+  to {
+
+    transform: rotate(360deg);
+
+  }
+
+}
+
+
+
+:root {
+
+  --color-bg: #0d1117;
+
+  --color-primary: #00e7ff;
+
+  --color-secondary: #0a1931;
+
+  --color-glass: rgba(10, 25, 49, 0.6);
+
+  --color-border: rgba(0, 231, 255, 0.2);
+
+  --color-shadow: rgba(0, 231, 255, 0.1);
+
+  --color-text: #e6f1ff;
+
+  --color-text-dim: #a5c8ff;
+
+}
+
+
+
+* {
+
+  box-sizing: border-box;
+
+  margin: 0;
+
+  padding: 0;
+
+}
+
+
+
+body {
+
+  font-family: 'Cairo', 'Segoe UI', sans-serif;
+
+  background-color: var(--color-bg);
+
+  background-image: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+
+  color: var(--color-text);
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: flex-start;
+
+  min-height: 100vh;
+
+  padding: 40px 20px;
+
+  overflow-y: auto;
+
+}
+
+
+
+.container {
+
+  width: 100%;
+
+  max-width: 550px;
+
+  background: var(--color-glass);
+
+  border: 1px solid var(--color-border);
+
+  border-radius: 20px;
+
+  padding: 30px;
+
+  box-shadow: 0 8px 32px 0 var(--color-shadow);
+
+  backdrop-filter: blur(10px);
+
+  -webkit-backdrop-filter: blur(10px);
+
+  animation: fadeIn 0.8s ease-out forwards;
+
+}
+
+
+
+h2 {
+
+  text-align: center;
+
+  color: var(--color-primary);
+
+  text-shadow: 0 0 12px var(--color-primary);
+
+  margin-bottom: 25px;
+
+  font-weight: 700;
+
+}
+
+
+
+label {
+
+  display: block;
+
+  margin: 15px 0 5px;
+
+  color: var(--color-text-dim);
+
+  font-weight: 600;
+
+  font-size: 0.9rem;
+
+}
+
+
+
+input[type="number"],
+
+select {
+
+  width: 100%;
+
+  padding: 12px 15px;
+
+  background: rgba(0, 0, 0, 0.3);
+
+  border: 1px solid rgba(0, 231, 255, 0.3);
+
+  border-radius: 8px;
+
+  color: var(--color-text);
+
+  font-size: 1rem;
+
+  font-family: 'Cairo', sans-serif;
+
+  transition: all 0.3s ease;
+
+}
+
+
+
+input[type="number"]:focus,
+
+select:focus {
+
+  outline: none;
+
+  border-color: var(--color-primary);
+
+  box-shadow: 0 0 15px var(--color-shadow);
+
+}
+
+
+
+select {
+
+  appearance: none;
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2300e7ff' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659L8.753 11.14a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+
+  background-repeat: no-repeat;
+
+  background-position: right 15px center;
+
+  padding-right: 40px;
+
+  padding-left: 15px;
+
+}
+
+
+
+#edge-buttons {
+
+  background: rgba(0, 0, 0, 0.2);
+
+  border: 1px dashed var(--color-border);
+
+  border-radius: 8px;
+
+  padding: 10px;
+
+  margin-top: 10px;
+
+  display: grid;
+
+  grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+
+  gap: 8px;
+
+}
+
+
+
+#edge-buttons-label {
+
+  color: var(--color-text-dim);
+
+  margin-bottom: 5px;
+
+  font-size: 0.9rem;
+
+}
+
+
+
+.edge-btn {
+
+  display: inline-block;
+
+  padding: 8px 10px;
+
+  background: rgba(0, 231, 255, 0.1);
+
+  color: var(--color-primary);
+
+  border: 1px solid var(--color-border);
+
+  border-radius: 5px;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+
+  text-align: center;
+
+  font-weight: 600;
+
+}
+
+
+
+.edge-btn:hover {
+
+  background: rgba(0, 231, 255, 0.3);
+
+}
+
+
+
+.edge-btn.selected {
+
+  background: var(--color-primary);
+
+  color: var(--color-bg);
+
+  text-shadow: none;
+
+  box-shadow: 0 0 10px var(--color-primary);
+
+  border-color: var(--color-primary);
+
+}
+
+
+
+#ca-params {
+
+  background: rgba(0, 0, 0, 0.1);
+
+  border-radius: 8px;
+
+  margin-top: 0;
+
+  padding: 0 15px 0 10px;
+
+  overflow: hidden;
+
+  max-height: 0;
+
+  opacity: 0;
+
+  border-left: 4px solid transparent;
+
+  transition: all 0.5s ease-out;
+
+}
+
+
+
+#ca-params label {
+
+  font-size: 0.85rem;
+
+}
+
+
+
+#ca-params input {
+
+  padding: 10px;
+
+  margin-bottom: 10px;
+
+}
+
+
+
+button {
+
+  width: 100%;
+
+  padding: 15px;
+
+  margin-top: 25px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  font-size: 1.1rem;
+
+  font-weight: 700;
+
+  font-family: 'Cairo', sans-serif;
+
+  cursor: pointer;
+
+  background: var(--color-primary);
+
+  color: var(--color-bg);
+
+  box-shadow: 0 0 15px rgba(0, 231, 255, 0.5);
+
+  transition: all 0.3s ease;
+
+  transform: perspective(1px) translateZ(0);
+
+}
+
+
+
+button:hover {
+
+  background: #b4dfea;
+
+  color: black;
+
+  box-shadow: 0 0 20px #afb5b7;
+
+}
+
+
+
+button:active {
+
+  transform: scale(0.98);
+
+}
+
+
+
+h3 {
+
+  color: var(--color-primary);
+
+  text-shadow: 0 0 8px var(--color-primary);
+
+  margin: 25px 0 10px;
+
+  padding-bottom: 5px;
+
+  border-bottom: 1px solid var(--color-border);
+
+}
+
+
+
+#result {
+
+  background: rgba(0, 0, 0, 0.3);
+
+  border-left: 4px solid var(--color-primary);
+
+  padding: 15px 20px;
+
+  border-radius: 0 8px 8px 0;
+
+  font-size: 0.95rem;
+
+  line-height: 1.8;
+
+  min-height: 50px;
+
+  display: flex;
+
+  align-items: center;
+
+}
+
+
+
+#result .spinner {
+
+  display: inline-block;
+
+  width: 20px;
+
+  height: 20px;
+
+  border: 3px solid rgba(0, 231, 255, 0.3);
+
+  border-radius: 50%;
+
+  border-top-color: var(--color-primary);
+
+  animation: spin 1s ease-in-out infinite;
+
+  margin-left: 10px;
+
+}
+
+
+
+.result-item {
+
+  display: block;
+
+  opacity: 0;
+
+  animation: textStreamIn 0.5s ease-out forwards;
+
+}
+
+
+
+.result-item span {
+
+  color: var(--color-text-dim);
+
+  min-width: 140px;
+
+  display: inline-block;
+
+}
+
+
+
+.result-item b {
+
+  color: #fff;
+
+  font-family: monospace;
+
+  font-size: 1.1rem;
+
+}
+
+
+
+#graph-container {
+
+  text-align: center;
+
+  margin-top: 20px;
+
+  background: rgba(0, 0, 0, 0.3);
+
+  border: 1px solid var(--color-border);
+
+  border-radius: 15px;
+
+  padding: 15px;
+
+  min-height: 250px;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  overflow: hidden;
+
+  position: relative;
+
+}
+
+
+
+#graph-container::before {
+
+  content: '';
+
+  position: absolute;
+
+  top: 0;
+
+  left: 0;
+
+  right: 0;
+
+  bottom: 0;
+
+  background: linear-gradient(to right, rgba(0, 231, 255, 0.05) 1px, transparent 1px),
+
+              linear-gradient(to bottom, rgba(0, 231, 255, 0.05) 1px, transparent 1px);
+
+  background-size: 20px 20px;
+
+  opacity: 0.5;
+
+}
+
+
+
+#graph_img {
+
+  width: 100%;
+
+  max-width: 450px;
+
+  height: auto;
+
+  border-radius: 10px;
+
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+
+  transition: opacity 0.5s ease-in-out;
+
+  opacity: 0;
+
+  position: relative;
+
+  z-index: 2;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+
+<div class="container">
+
+  <h2>Graph Colouring Visualizer</h2>
+
+
+
+  <label for="nodes">Number of Nodes:</label>
+
+  <input type="number" id="nodes" min="2" max="10" value="3" onchange="updateEdges()">
+
+
+
+  <label for="edges">Number of Edges:</label>
+
+  <input type="number" id="edges" min="1" value="2" onchange="generateEdgeButtons()">
+
+
+
+  <label id="edge-buttons-label">Select Edges:</label>
+
+  <div id="edge-buttons"></div>
+
+
+
+  <label for="algorithm">Algorithm:</label>
+
+  <select id="algorithm" onchange="toggleCAParams()">
+
+    <option value="backtracking">Backtracking</option>
+
+    <option value="cultural">Cultural Algorithm</option>
+
+  </select>
+
+
+
+  <label for="max_colors">Max Colors:</label>
+
+  <input type="number" id="max_colors" value="4">
+
+
+
+  <div id="ca-params">
+
+    <label>Population Size:</label>
+
+    <input type="number" id="pop_size" value="20">
+
+    <label>Generations:</label>
+
+    <input type="number" id="generations" value="50">
+
+    <label>Mutation Rate:</label>
+
+    <input type="number" id="mutation_rate" value="0.1" step="0.01" min="0" max="1">
+
+  </div>
+
+
+
+  <button onclick="solve()">Run Simulation & Visualize Steps</button>
+
+
+
+  <h3>Result:</h3>
+
+  <div id="result">
+
+    Waiting for simulation to start...
+
+  </div>
+
+
+
+  <div id="graph-container">
+
+    <img id="graph_img" src="">
+
+  </div>
+
+
+
+</div>
+
+
+
+<script>
+
+let selectedEdges = [];
+
+
+
+function updateEdges() {
+
+  selectedEdges = [];
+
+  document.getElementById('edge-buttons').innerHTML = '';
+
+  generateEdgeButtons();
+
+}
+
+
+
+function generateEdgeButtons() {
+
+  const n = parseInt(document.getElementById('nodes').value);
+
+  const edgeCountInput = document.getElementById('edges');
+
+  const edgeCount = parseInt(edgeCountInput.value);
+
+  const maxEdges = (n * (n - 1)) / 2;
+
+
+
+  if (edgeCount > maxEdges) edgeCountInput.value = maxEdges;
+
+
+
+  let container = document.getElementById('edge-buttons');
+
+  container.innerHTML = '';
+
+
+
+  let allEdges = [];
+
+  for (let i = 0; i < n; i++)
+
+    for (let j = i + 1; j < n; j++)
+
+      allEdges.push(`${i}-${j}`);
+
+
+
+  allEdges.forEach(e => {
+
+    const btn = document.createElement('div');
+
+    btn.className = 'edge-btn';
+
+    btn.innerText = e;
+
+    btn.onclick = (event) => toggleEdge(event, e);
+
+    container.appendChild(btn);
+
+  });
+
+
+
+  const currentEdges = selectedEdges.slice();
+
+  selectedEdges = [];
+
+  document.querySelectorAll('.edge-btn').forEach(btn => {
+
+    if (currentEdges.includes(btn.innerText)) {
+
+      btn.classList.add('selected');
+
+      selectedEdges.push(btn.innerText);
+
+    }
+
+  });
+
+}
+
+
+
+function toggleEdge(event, edge) {
+
+  const max = parseInt(document.getElementById('edges').value);
+
+  if (selectedEdges.includes(edge)) {
+
+    selectedEdges = selectedEdges.filter(e => e !== edge);
+
+    event.target.classList.remove('selected');
+
+  } else {
+
+    if (selectedEdges.length >= max) {
+
+      alert(`⚠️ You can select only ${max} edges.`);
+
+      return;
+
+    }
+
+    selectedEdges.push(edge);
+
+    event.target.classList.add('selected');
+
+  }
+
+}
+
+
+
+function toggleCAParams() {
+
+  const algo = document.getElementById('algorithm').value;
+
+  const paramsDiv = document.getElementById('ca-params');
+
+  if (algo === 'cultural') {
+
+    paramsDiv.style.maxHeight = '350px';
+
+    paramsDiv.style.opacity = '1';
+
+    paramsDiv.style.padding = '15px 15px 15px 10px';
+
+    paramsDiv.style.marginTop = '10px';
+
+    paramsDiv.style.borderLeft = '4px solid var(--color-primary)';
+
+  } else {
+
+    paramsDiv.style.maxHeight = '0';
+
+    paramsDiv.style.opacity = '0';
+
+    paramsDiv.style.padding = '0 15px 0 10px';
+
+    paramsDiv.style.marginTop = '0';
+
+    paramsDiv.style.borderLeft = '4px solid transparent';
+
+  }
+
+}
+
+
+
+async function solve() {
+
+  const n = parseInt(document.getElementById('nodes').value);
+
+  const edges = selectedEdges.map(e => e.split('-').map(Number));
+
+  const algorithm = document.getElementById('algorithm').value;
+
+  const max_colors = parseInt(document.getElementById('max_colors').value);
+
+
+
+  const pop_size = parseInt(document.getElementById('pop_size').value);
+
+  const generations = parseInt(document.getElementById('generations').value);
+
+  const mutation_rate = parseFloat(document.getElementById('mutation_rate').value);
+
+
+
+  if (edges.length === 0) {
+
+    alert("⚠️ Please select at least one edge!");
+
+    return;
+
+  }
+
+
+
+  const resultDiv = document.getElementById('result');
+
+  resultDiv.innerHTML = 'Processing simulation... <span class="spinner"></span>';
+
+  const img = document.getElementById('graph_img');
+
+  img.style.opacity = 0.3;
+
+
+
+  try {
+
+    const res = await axios.post('/simulate', {
+
+      nodes: n,
+
+      edges: edges,
+
+      algorithm: algorithm,
+
+      max_colours: max_colors,
+
+      pop_size: pop_size,
+
+      generations: generations,
+
+      mutation_rate: mutation_rate
+
+    });
+
+
+
+    const data = res.data;
+
+    const steps = data.steps;
+
+
+
+    for (let i = 0; i < steps.length; i++) {
+
+      const stepRes = await axios.post('/step_image', { nodes: n, edges: edges, coloring: steps[i] });
+
+      img.src = "data:image/png;base64," + stepRes.data.image;
+
+      if (i === 0) img.style.opacity = 1;
+
+      await new Promise(r => setTimeout(r, 200));
+
+    }
+
+
+
+    resultDiv.innerHTML = `
+
+      <div style="width: 100%;">
+
+        <span class="result-item" style="animation-delay: 0s;"><span>🧩 Final Solution:</span> <b>[${data.solution.join(', ')}]</b></span>
+
+        <span class="result-item" style="animation-delay: 0.2s;"><span>💥 Conflicts:</span> <b>${data.conflicts}</b></span>
+
+        <span class="result-item" style="animation-delay: 0.4s;"><span>🌈 Chromatic Number:</span> <b>${data.chromatic_number}</b></span>
+
+        <span class="result-item" style="animation-delay: 0.6s;"><span>⏱️ Time Taken:</span> <b>${data.time.toFixed(4)} sec</b></span>
+
+      </div>
+
+    `;
+
+
+
+    const finalStepRes = await axios.post('/step_image', { nodes: n, edges: edges, coloring: data.solution });
+
+    img.src = "data:image/png;base64," + finalStepRes.data.image;
+
+    img.style.opacity = 1;
+
+
+
+  } catch (error) {
+
+    console.error("Error during simulation:", error);
+
+    resultDiv.innerHTML = "⚠️ An error occurred during simulation.";
+
+    img.style.opacity = 1;
+
+  }
+
+}
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  updateEdges();
+
+  toggleCAParams();
+
+});
+
+</script>
+
+
+
+</body>
+
+</html>
+
