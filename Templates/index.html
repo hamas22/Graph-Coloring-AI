@@ -11,6 +11,17 @@
         @keyframes pulseGlow { 0% { box-shadow: 0 0 15px rgba(8, 82, 90, 0.5); } 50% { box-shadow: 0 0 30px rgb(0, 104, 174); } 100% { box-shadow: 0 0 15px rgba(0, 173, 192, 0.5); } }
         @keyframes textStreamIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes nodeFloat {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+            25% { transform: translate(20px, 15px) scale(1.05); opacity: 0.8; }
+            50% { transform: translate(-10px, 25px) scale(0.95); opacity: 0.6; }
+            75% { transform: translate(15px, -5px) scale(1.1); opacity: 0.9; }
+            100% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+        }
+        @keyframes nodePulse {
+            0%, 100% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor; }
+            50% { box-shadow: 0 0 15px currentColor, 0 0 30px currentColor; }
+        }
 
         :root {
             --color-bg: #0d1117;
@@ -21,11 +32,54 @@
             --color-shadow: rgba(0, 231, 255, 0.1);
             --color-text: #e6f1ff;
             --color-text-dim: #a5c8ff;
+            --color-node-1: #FF5733;
+            --color-node-2: #33FF57;
+            --color-node-3: #3357FF;
+            --color-node-4: #FF33F7;
+            --color-node-5: #F7FF33;
+            --color-node-6: #33F7FF;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Cairo', 'Segoe UI', sans-serif; background-color: var(--color-bg); background-image: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); color: var(--color-text); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 40px 20px; overflow-y: auto; }
-        .container { width: 100%; max-width: 550px; background: var(--color-glass); border: 1px solid var(--color-border); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px 0 var(--color-shadow); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: fadeIn 0.8s ease-out forwards; margin-bottom: 50px; }
+        body 
+        {
+             font-family: 'Cairo', 'Segoe UI', sans-serif; 
+             background-color: var(--color-bg); 
+            background-image: url("../stars1.webp");
+             background-attachment: fixed;
+             color: var(--color-text); 
+             display: flex;
+               justify-content: center; align-items: flex-start; min-height: 100vh; padding: 40px 20px; overflow-y: auto; position: relative; overflow-x: hidden; }
+        
+        .background-nodes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+        .background-node {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            opacity: 0.7;
+            animation: nodeFloat 15s infinite ease-in-out alternate, nodePulse 4s infinite alternate;
+        }
+        .background-node:nth-child(1) { top: 10%; left: 15%; background-color: var(--color-node-1); animation-delay: 0s, 0.5s; }
+        .background-node:nth-child(2) { top: 30%; left: 80%; background-color: var(--color-node-2); animation-delay: 2s, 1s; width: 60px; height: 60px; }
+        .background-node:nth-child(3) { top: 60%; left: 20%; background-color: var(--color-node-3); animation-delay: 4s, 1.5s; width: 40px; height: 40px; }
+        .background-node:nth-child(4) { top: 80%; left: 60%; background-color: var(--color-node-4); animation-delay: 6s, 2s; }
+        .background-node:nth-child(5) { top: 5%; left: 50%; background-color: var(--color-node-5); animation-delay: 8s, 2.5s; width: 70px; height: 70px; }
+        .background-node:nth-child(6) { top: 45%; left: 5%; background-color: var(--color-node-6); animation-delay: 10s, 3s; }
+        .background-node:nth-child(7) { top: 20%; left: 40%; background-color: var(--color-node-1); animation-delay: 12s, 3.5s; width: 45px; height: 45px; }
+        .background-node:nth-child(8) { top: 70%; left: 35%; background-color: var(--color-node-2); animation-delay: 14s, 4s; }
+
+
+        .container { width: 100%; max-width: 550px; background: var(--color-glass); border: 1px solid var(--color-border); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px 0 var(--color-shadow); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: fadeIn 0.8s ease-out forwards; margin-bottom: 50px; position: relative; z-index: 1; }
         h2 { text-align: center; color: var(--color-primary); text-shadow: 0 0 12px var(--color-primary); margin-bottom: 25px; font-weight: 700; }
         label { display: block; margin: 15px 0 5px; color: var(--color-text-dim); font-weight: 600; font-size: 0.9rem; }
         input[type="number"], select { width: 100%; padding: 12px 15px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(0, 231, 255, 0.3); border-radius: 8px; color: var(--color-text); font-size: 1rem; font-family: 'Cairo', sans-serif; transition: all 0.3s ease; }
@@ -53,20 +107,31 @@
         .graph-img { width: 100%; max-width: 450px; height: auto; border-radius: 10px; box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); transition: opacity 0.2s ease-in-out; opacity: 0; position: relative; z-index: 2; }
         .sim-controls { margin-top: 15px; display: flex; justify-content: center; gap: 10px; }
         .sim-controls button { width: auto; padding: 10px 15px; margin-top: 0; font-size: 1rem; }
-        #fc-button-container { text-align: center; margin-top: 25px; padding: 10px; border-top: 1px solid var(--color-border); display: none; }
-        #fc-button { background: #60CF60; color: var(--color-bg); box-shadow: 0 0 15px rgba(96, 207, 96, 0.5); }
-        #fc-button:hover { background: #90ee90; color: black; box-shadow: 0 0 20px rgba(96, 207, 96, 0.8); }
-        .simulation-active .action-button, .simulation-active #fc-button { pointer-events: none; opacity: 0.5; }
+        #opt-button-container { text-align: center; margin-top: 25px; padding: 10px; border-top: 1px solid var(--color-border); display: none; }
+        #opt-button { background: #DA42A2; color: var(--color-bg); box-shadow: 0 0 15px rgba(218, 66, 162, 0.5); }
+        #opt-button:hover { background: #ff75d0; color: black; box-shadow: 0 0 20px rgba(218, 66, 162, 0.8); }
+        .simulation-active .action-button, .simulation-active #opt-button { pointer-events: none; opacity: 0.5; }
         .simulation-paused .play-pause-btn { background: #ff5722; }
         .simulation-paused .play-pause-btn:hover { background: #ff8a65; color: black; }
         .secondary-section { border-top: 2px dashed var(--color-border); margin-top: 30px; padding-top: 20px; animation: fadeIn 0.8s ease-out forwards; }
-        .secondary-section h3 { color: #60CF60; text-shadow: 0 0 8px rgba(96, 207, 96, 0.5); border-color: rgba(96, 207, 96, 0.3); }
-        .secondary-section .result-box { border-left-color: #60CF60; }
-        .secondary-section .graph-vis-container::before { background: linear-gradient(to right, rgba(96, 207, 96, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(96, 207, 96, 0.05) 1px, transparent 1px); }
+        .secondary-section h3 { color: #DA42A2; text-shadow: 0 0 8px rgba(218, 66, 162, 0.5); border-color: rgba(218, 66, 162, 0.3); }
+        .secondary-section .result-box { border-left-color: #DA42A2; }
+        .secondary-section .graph-vis-container::before { background: linear-gradient(to right, rgba(218, 66, 162, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(218, 66, 162, 0.05) 1px, transparent 1px); }
     </style>
 </head>
 
-<body>
+<body >
+
+    <div class="background-nodes">
+        <div class="background-node"></div>
+        <div class="background-node"></div>
+        <div class="background-node"></div>
+        <div class="background-node"></div>
+        <div class="background-node"></div>
+        <div class="background-node"></div>
+        <div class="background-node"></div>
+        <div class="background-node"></div>
+    </div>
 
     <div class="container">
         <h2>Graph Colouring Visualizer</h2>
@@ -114,27 +179,27 @@
             </div>
         </div>
         
-        <div id="fc-button-container">
+        <div id="opt-button-container">
             <p style="color: var(--color-text-dim); margin-bottom: 10px; font-size: 0.9rem;">
                 Try a better approach?
             </p>
-            <button id="fc-button" class="action-button" onclick="solve('forward_checking')">
-                🔥 Run Forward Checking Simulation
+            <button id="opt-button" class="action-button" onclick="solve('backtracking_optimized')">
+                🚀 Run Optimized Backtracking (Heuristics)
             </button>
         </div>
 
         <div id="secondary-run-section" class="secondary-section" style="display: none;">
-            <h3>Forward Checking Result:</h3>
-            <div id="result-fc" class="result-box">
+            <h3>Optimized Result:</h3>
+            <div id="result-opt" class="result-box">
                 Waiting for simulation...
             </div>
 
-            <div id="graph-container-fc" class="graph-vis-container">
-                <img id="graph_img_fc" class="graph-img" src="">
+            <div id="graph-container-opt" class="graph-vis-container">
+                <img id="graph_img_opt" class="graph-img" src="">
             </div>
             
-            <div id="simulation-controls-fc" class="sim-controls" style="display: none;">
-                <button id="play-pause-btn-fc" class="play-pause-btn" onclick="toggleSimulationPause()">⏸️ Pause</button>
+            <div id="simulation-controls-opt" class="sim-controls" style="display: none;">
+                <button id="play-pause-btn-opt" class="play-pause-btn" onclick="toggleSimulationPause()">⏸️ Pause</button>
                 <button onclick="stopSimulation()">⏹️ Stop</button>
             </div>
         </div>
@@ -217,10 +282,10 @@
         function getUIElements() {
             if (isSecondaryRun) {
                 return {
-                    resultDiv: document.getElementById('result-fc'),
-                    imgElement: document.getElementById('graph_img_fc'),
-                    controlsDiv: document.getElementById('simulation-controls-fc'),
-                    playPauseBtn: document.getElementById('play-pause-btn-fc')
+                    resultDiv: document.getElementById('result-opt'),
+                    imgElement: document.getElementById('graph_img_opt'),
+                    controlsDiv: document.getElementById('simulation-controls-opt'),
+                    playPauseBtn: document.getElementById('play-pause-btn-opt')
                 };
             } else {
                 return {
@@ -237,15 +302,15 @@
             
             let algorithm = document.getElementById('algorithm').value;
             
-            if (mode === 'forward_checking') {
+            if (mode === 'backtracking_optimized') {
                 isSecondaryRun = true;
-                algorithm = 'forward_checking';
+                algorithm = 'backtracking_optimized';
                 document.getElementById('secondary-run-section').style.display = 'block';
             } else {
                 isSecondaryRun = false;
                 currentAlgorithm = algorithm;
                 document.getElementById('secondary-run-section').style.display = 'none';
-                document.getElementById('fc-button-container').style.display = 'none';
+                document.getElementById('opt-button-container').style.display = 'none';
             }
             
             const ui = getUIElements();
@@ -321,8 +386,8 @@
                 const ui = getUIElements();
                 ui.controlsDiv.style.display = 'none';
                 
-                if (!isSecondaryRun && (currentAlgorithm === 'backtracking' || currentAlgorithm === 'cultural') && simulationData.chromatic_number > 0) {
-                    document.getElementById('fc-button-container').style.display = 'block';
+                if (!isSecondaryRun && currentAlgorithm === 'backtracking' && simulationData.chromatic_number > 0) {
+                    document.getElementById('opt-button-container').style.display = 'block';
                 }
             }
         }
