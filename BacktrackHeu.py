@@ -1,69 +1,106 @@
 import time
 
-def graph_colouring_optimized(graph, max_colours):
+def force_assign_optimized(graph, m, steps):
     n = len(graph)
     assignment = [-1] * n
-    steps = []
-
-    # Degree heuristic
-    degrees = [sum(row) for row in graph]
-
-    def available_colours(node):
-        used = {assignment[neighbor] for neighbor in range(n) if graph[node][neighbor] == 1 and assignment[neighbor] != -1}
-        return [c for c in range(max_colours) if c not in used]
-
-    def available_colours_lcv(node):
-        colours = available_colours(node)
-        # LCV
-        def constraining_value(colour):
-            count = 0
+    for node in range(n):
+        best_color = 0
+        min_conflicts = float('inf')
+        for color in range(m):
+            current_conflicts = 0
             for neighbor in range(n):
-                if graph[node][neighbor] == 1 and assignment[neighbor] == -1:
-                    if colour in available_colours(neighbor):
-                        count += 1
-            return count
-        return sorted(colours, key=constraining_value)
+                if graph[node][neighbor] == 1 and assignment[neighbor] == color:
+                    current_conflicts += 1
+            if current_conflicts < min_conflicts:
+                min_conflicts = current_conflicts
+                best_color = color
+        assignment[node] = best_color
+        domains_snapshot = {i: [best_color] if i == node else list(range(m)) for i in range(n)}
+        steps.append((assignment.copy(), domains_snapshot))
+    return assignment
 
-    def select_node():
-        # MRV
-        unassigned = [i for i in range(n) if assignment[i] == -1]
+def graph_colouring_optimized(graph, max_colours):
+    n = len(graph)
+    degrees = [sum(row) for row in graph]
+    final_assignment = None
+    final_steps = []
+    min_chromatic = 0
+    
+    def fast_domain_copy(domains):
+        return {k: v[:] for k, v in domains.items()}
+
+    def select_unassigned_variable(assignment, domains):
+        unassigned = [v for v in range(n) if assignment[v] == -1]
         if not unassigned:
-            return None
-        mrv_min = min(len(available_colours(i)) for i in unassigned)
-        candidates = [i for i in unassigned if len(available_colours(i)) == mrv_min]
-        # Degree Heuristic: اختر العقدة ذات أكبر درجة عند التعادل
-        return max(candidates, key=lambda x: degrees[x])
+            return -1
+        return min(unassigned, key=lambda v: (len(domains[v]), -degrees[v]))
 
-    def solve():
-        node = select_node()
-        if node is None:
+    def calculate_constraining_power(node, color, assignment, domains, n):
+        count = 0
+        for neighbor in range(n):
+            if graph[node][neighbor] == 1 and assignment[neighbor] == -1:
+                if color in domains[neighbor]:
+                    count += 1
+        return count
+
+    def solve(assignment, domains, steps):
+        if -1 not in assignment:
             return True
 
-        for colour in available_colours_lcv(node):
-            assignment[node] = colour
-            steps.append(assignment.copy())
+        node = select_unassigned_variable(assignment, domains)
+        
+        sorted_colors = sorted(
+            domains[node][:], 
+            key=lambda color: calculate_constraining_power(node, color, assignment, domains, n)
+        )
 
-            # Forward Checking
-            if all(available_colours(neighbor) for neighbor in range(n) if graph[node][neighbor] == 1 and assignment[neighbor] == -1):
-                if solve():
+        for color in sorted_colors:
+            assignment[node] = color
+            steps.append((assignment[:], fast_domain_copy(domains)))
+
+            new_domains = fast_domain_copy(domains)
+            possible = True
+            
+            for neighbor in range(n):
+                if graph[node][neighbor] == 1 and assignment[neighbor] == -1:
+                    if color in new_domains[neighbor]:
+                        new_domains[neighbor].remove(color)
+                        if not new_domains[neighbor]:
+                            possible = False
+                            break
+            
+            if possible:
+                if solve(assignment, new_domains, steps):
                     return True
 
-            assignment[node] = -1  # Backtrack
-            steps.append(assignment.copy())
+            assignment[node] = -1
+            steps.append((assignment[:], fast_domain_copy(domains)))
 
         return False
 
-    start_time = time.time()
-    best_solution = None
-    chromatic_number = None
+    start_time = time.perf_counter()
 
+    found = False
     for m in range(1, max_colours + 1):
         assignment = [-1] * n
-        steps.clear()
-        if solve():
-            best_solution = assignment.copy()
-            chromatic_number = m
+        domains = {i: list(range(m)) for i in range(n)}
+        steps = []
+        
+        if solve(assignment, domains, steps):
+            final_assignment = assignment
+            final_steps = steps
+            min_chromatic = m
+            found = True
             break
+        
+        final_steps = steps
 
-    end_time = time.time()
-    return best_solution, chromatic_number, steps, end_time - start_time
+    if not found:
+        forced_steps = []
+        final_assignment = force_assign_optimized(graph, max_colours, forced_steps)
+        final_steps.extend(forced_steps)
+        min_chromatic = max_colours
+
+    end_time = time.perf_counter()
+    
+    return final_assignment, min_chromatic, final_steps, end_time - start_time

@@ -85,8 +85,13 @@
         input[type="number"], select { width: 100%; padding: 12px 15px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(0, 231, 255, 0.3); border-radius: 8px; color: var(--color-text); font-size: 1rem; font-family: 'Cairo', sans-serif; transition: all 0.3s ease; }
         input[type="number"]:focus, select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 15px var(--color-shadow); }
         select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2300e7ff' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659L8.753 11.14a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 15px center; padding-right: 40px; padding-left: 15px; }
+        
+        .edges-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .select-all-btn { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-dim); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+        .select-all-btn:hover { background: rgba(0, 231, 255, 0.1); color: var(--color-primary); }
+
         #edge-buttons { background: rgba(0, 0, 0, 0.2); border: 1px dashed var(--color-border); border-radius: 8px; padding: 10px; margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 8px; }
-        #edge-buttons-label { color: var(--color-text-dim); margin-bottom: 5px; font-size: 0.9rem; }
+        #edge-buttons-label { color: var(--color-text-dim); margin: 0; font-size: 0.9rem; }
         .edge-btn { display: inline-block; padding: 8px 10px; background: rgba(0, 231, 255, 0.1); color: var(--color-primary); border: 1px solid var(--color-border); border-radius: 5px; cursor: pointer; transition: all 0.2s ease; text-align: center; font-weight: 600; }
         .edge-btn:hover { background: rgba(0, 231, 255, 0.3); }
         .edge-btn.selected { background: var(--color-primary); color: var(--color-bg); text-shadow: none; box-shadow: 0 0 10px var(--color-primary); border-color: var(--color-primary); }
@@ -100,7 +105,7 @@
         .result-box { background: rgba(0, 0, 0, 0.3); border-left: 4px solid var(--color-primary); padding: 15px 20px; border-radius: 0 8px 8px 0; font-size: 0.95rem; line-height: 1.8; min-height: 50px; display: flex; align-items: center; }
         .result-box .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0, 231, 255, 0.3); border-radius: 50%; border-top-color: var(--color-primary); animation: spin 1s ease-in-out infinite; margin-left: 10px; }
         .result-item { display: block; opacity: 0; animation: textStreamIn 0.5s ease-out forwards; }
-        .result-item span { color: var(--color-text-dim); min-width: 140px; display: inline-block; }
+        .result-item span { color: var(--color-text-dim); min-width: 20px; display: inline-block; }
         .result-item b { color: #fff; font-family: monospace; font-size: 1.1rem; }
         .graph-vis-container { text-align: center; margin-top: 20px; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--color-border); border-radius: 15px; padding: 15px; min-height: 250px; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; }
         .graph-vis-container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to right, rgba(0, 231, 255, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 231, 255, 0.05) 1px, transparent 1px); background-size: 20px 20px; opacity: 0.5; }
@@ -117,6 +122,40 @@
         .secondary-section h3 { color: #DA42A2; text-shadow: 0 0 8px rgba(218, 66, 162, 0.5); border-color: rgba(218, 66, 162, 0.3); }
         .secondary-section .result-box { border-left-color: #DA42A2; }
         .secondary-section .graph-vis-container::before { background: linear-gradient(to right, rgba(218, 66, 162, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(218, 66, 162, 0.05) 1px, transparent 1px); }
+
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); z-index: 1000;
+            display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(8px); animation: fadeIn 0.3s ease-out;
+        }
+        .modal-box {
+            background: linear-gradient(135deg, rgba(20, 24, 36, 0.95), rgba(45, 25, 40, 0.95));
+            border: 1px solid rgba(255, 120, 120, 0.3);
+            box-shadow: 0 0 25px rgba(255, 100, 100, 0.15);
+            padding: 35px; border-radius: 16px; max-width: 420px; text-align: center;
+            transform: scale(0.9); opacity: 0; transition: all 0.3s ease-out;
+        }
+        .modal-overlay.active .modal-box { transform: scale(1); opacity: 1; }
+        .modal-icon { font-size: 3.5rem; margin-bottom: 15px; animation: nodePulse 2s infinite; filter: drop-shadow(0 0 10px rgba(255, 100, 100, 0.4)); }
+        .modal-title { color: #ff8e8e; font-size: 1.6rem; margin-bottom: 12px; font-weight: 700; text-shadow: 0 0 15px rgba(255, 60, 60, 0.3); }
+        .modal-text { color: #dac5c5; margin-bottom: 25px; line-height: 1.6; font-size: 1.05rem; }
+        .modal-btn {
+            background: rgba(255, 100, 100, 0.1); color: #ff8e8e; border: 1px solid rgba(255, 120, 120, 0.4);
+            padding: 10px 30px; font-size: 1rem; border-radius: 8px; cursor: pointer;
+            transition: all 0.3s; font-family: 'Cairo', sans-serif; font-weight: 600;
+        }
+        .modal-btn:hover { background: rgba(255, 100, 100, 0.2); color: #fff; box-shadow: 0 0 20px rgba(255, 100, 100, 0.3); border-color: #ff8e8e; }
+
+        .result-box.failure { border-left-color: #ff5555; background: rgba(50, 10, 10, 0.4); }
+        .result-box.failure b { color: #ffaaaa; }
+        .status-badge {
+            display: inline-block; padding: 4px 10px; border-radius: 6px; 
+            font-size: 0.85rem; font-weight: bold; margin-bottom: 8px;
+        }
+        .status-success { background: rgba(0, 231, 255, 0.15); color: #00e7ff; border: 1px solid rgba(0, 231, 255, 0.4); }
+        .status-fail { background: rgba(255, 85, 85, 0.15); color: #ff5555; border: 1px solid rgba(255, 85, 85, 0.4); }
     </style>
 </head>
 
@@ -133,13 +172,28 @@
         <div class="background-node"></div>
     </div>
 
+    <div id="connectivity-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-icon">⚠️</div>
+            <div class="modal-title">System Alert</div>
+            <div class="modal-text" id="modal-msg">
+                Scanning connectivity... <br>
+                Isolated nodes detected. The neural link requires a fully connected graph.
+            </div>
+            <button class="modal-btn" onclick="closeModal()">Acknowledge</button>
+        </div>
+    </div>
+
     <div class="container">
         <h2>Graph Colouring Visualizer</h2>
 
         <label for="nodes">Number of Nodes:</label>
         <input type="number" id="nodes" min="2" max="10" value="3" onchange="updateEdges()">
 
-        <label id="edge-buttons-label">Select Edges (Connect Nodes):</label>
+        <div class="edges-header">
+            <label id="edge-buttons-label">Select Edges (Connect Nodes):</label>
+            <button class="select-all-btn" onclick="selectAllEdges()">Select All</button>
+        </div>
         <div id="edge-buttons"></div>
 
         <label for="algorithm">Algorithm:</label>
@@ -214,8 +268,10 @@
         let simulationData = null;
         let currentAlgorithm = null;
         let simulationTimeout = null;
-        
         let isSecondaryRun = false;
+        
+        // خريطة الألوان مطابقة للبايثون
+        const COLOR_MAP = ["#DA42A2", "#60CF60", "#4A6EB8", '#FFFF00', '#800080', '#FFA500', '#00FFFF', '#FF00FF', '#00FF00', '#FF0000', '#A52A2A', '#FFC0CB'];
 
         function updateEdges() {
             selectedEdges = [];
@@ -237,16 +293,34 @@
                 const btn = document.createElement('div');
                 btn.className = 'edge-btn';
                 btn.innerText = e;
+                btn.dataset.edge = e;
                 btn.onclick = (event) => toggleEdge(event, e);
                 container.appendChild(btn);
             });
+        }
+        
+        function selectAllEdges() {
+            const n = parseInt(document.getElementById('nodes').value);
+            const buttons = document.querySelectorAll('.edge-btn');
+            let allSelected = true;
+            
+            // التحقق مما إذا كان الكل محدد بالفعل
+            buttons.forEach(btn => {
+                if (!btn.classList.contains('selected')) allSelected = false;
+            });
 
-            const currentEdges = selectedEdges.slice();
-            selectedEdges = [];
-            document.querySelectorAll('.edge-btn').forEach(btn => {
-                if (currentEdges.includes(btn.innerText)) {
-                    btn.classList.add('selected');
-                    selectedEdges.push(btn.innerText);
+            buttons.forEach(btn => {
+                const edge = btn.dataset.edge;
+                if (allSelected) {
+                    // إلغاء تحديد الكل
+                    btn.classList.remove('selected');
+                    selectedEdges = [];
+                } else {
+                    // تحديد الكل
+                    if (!btn.classList.contains('selected')) {
+                        btn.classList.add('selected');
+                        if (!selectedEdges.includes(edge)) selectedEdges.push(edge);
+                    }
                 }
             });
         }
@@ -297,70 +371,119 @@
             }
         }
 
-        async function solve(mode) {
-            stopSimulation();
+        function checkGraphConnectivity(n, edges) {
+            if (n <= 1) return { connected: true };
             
-            let algorithm = document.getElementById('algorithm').value;
-            
-            if (mode === 'backtracking_optimized') {
-                isSecondaryRun = true;
-                algorithm = 'backtracking_optimized';
-                document.getElementById('secondary-run-section').style.display = 'block';
+            let adj = Array.from({ length: n }, () => []);
+            edges.forEach(edgeStr => {
+                let [u, v] = edgeStr.split('-').map(Number);
+                adj[u].push(v);
+                adj[v].push(u);
+            });
+
+            let visited = new Set();
+            let queue = [0]; 
+            visited.add(0);
+
+            while (queue.length > 0) {
+                let node = queue.shift();
+                for (let neighbor of adj[node]) {
+                    if (!visited.has(neighbor)) {
+                        visited.add(neighbor);
+                        queue.push(neighbor);
+                    }
+                }
+            }
+
+            if (visited.size === n) {
+                return { connected: true };
             } else {
-                isSecondaryRun = false;
-                currentAlgorithm = algorithm;
-                document.getElementById('secondary-run-section').style.display = 'none';
-                document.getElementById('opt-button-container').style.display = 'none';
-            }
-            
-            const ui = getUIElements();
-            
-            const n = parseInt(document.getElementById('nodes').value);
-            const edges = selectedEdges.map(e => e.split('-').map(Number));
-            const max_colors = parseInt(document.getElementById('max_colors').value);
-
-            const pop_size = parseInt(document.getElementById('pop_size').value);
-            const generations = parseInt(document.getElementById('generations').value);
-            const mutation_rate = parseFloat(document.getElementById('mutation_rate').value);
-
-            if (edges.length === 0) {
-                alert("⚠️ Please select at least one edge!");
-                return;
-            }
-
-            ui.resultDiv.innerHTML = `Processing ${algorithm.replace('_', ' ')}... <span class="spinner"></span>`;
-            ui.imgElement.style.opacity = 0.3;
-            document.body.classList.add('simulation-active');
-
-            try {
-                const res = await axios.post('/simulate', {
-                    nodes: n,
-                    edges: edges,
-                    algorithm: algorithm,
-                    max_colours: max_colors,
-                    pop_size: pop_size,
-                    generations: generations,
-                    mutation_rate: mutation_rate
-                });
-
-                simulationData = res.data;
-                currentStep = 0;
-                simulationRunning = true;
-                simulationPaused = false;
-                
-                ui.controlsDiv.style.display = 'flex';
-                ui.playPauseBtn.innerText = '⏸️ Pause';
-                document.body.classList.remove('simulation-paused');
-
-                runSimulationLoop();
-
-            } catch (error) {
-                console.error("Error during simulation:", error);
-                ui.resultDiv.innerHTML = "⚠️ An error occurred during simulation.";
-                ui.imgElement.style.opacity = 1;
-                stopSimulation();
+                let missing = [];
+                for(let i=0; i<n; i++) if(!visited.has(i)) missing.push(i);
+                return { connected: false, missing: missing };
             }
         }
+
+        function openModal(missingNodes) {
+            const modal = document.getElementById('connectivity-modal');
+            const msg = document.getElementById('modal-msg');
+            msg.innerHTML = `Scanning system...<br>
+                             The algorithm requires a fully connected structure.<br>
+                             <span style="color: #ff8e8e; font-weight: bold; font-size: 1.1em; display:block; margin-top:8px;">Isolated Node(s): ${missingNodes.join(', ')}</span>`;
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('connectivity-modal');
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        async function solve(mode) {
+        stopSimulation();
+        
+        let algorithm = document.getElementById('algorithm').value;
+        const n = parseInt(document.getElementById('nodes').value);
+        
+        if (mode === 'backtracking_optimized') {
+            isSecondaryRun = true;
+            algorithm = 'backtracking_optimized';
+            document.getElementById('secondary-run-section').style.display = 'block';
+        } else {
+            isSecondaryRun = false;
+            currentAlgorithm = algorithm;
+            document.getElementById('secondary-run-section').style.display = 'none';
+            document.getElementById('opt-button-container').style.display = 'none';
+        }
+        
+        const connectivity = checkGraphConnectivity(n, selectedEdges);
+        if (!connectivity.connected) {
+            openModal(connectivity.missing);
+            return;
+        }
+
+        const ui = getUIElements();
+        const edges = selectedEdges.map(e => e.split('-').map(Number));
+        const max_colors = parseInt(document.getElementById('max_colors').value);
+        const pop_size = parseInt(document.getElementById('pop_size').value);
+        const generations = parseInt(document.getElementById('generations').value);
+        const mutation_rate = parseFloat(document.getElementById('mutation_rate').value);
+
+        ui.resultDiv.className = 'result-box'; 
+        ui.resultDiv.innerHTML = `Processing ${algorithm.replace('_', ' ')}... <span class="spinner"></span>`;
+        ui.imgElement.style.opacity = 0.3;
+        document.body.classList.add('simulation-active');
+
+        try {
+            const res = await axios.post('/simulate', {
+                nodes: n,
+                edges: edges,
+                algorithm: algorithm,
+                max_colours: max_colors,
+                pop_size: pop_size,
+                generations: generations,
+                mutation_rate: mutation_rate
+            });
+
+            simulationData = res.data;
+            currentStep = 0;
+            simulationRunning = true;
+            simulationPaused = false;
+            
+            ui.controlsDiv.style.display = 'flex';
+            ui.playPauseBtn.innerText = '⏸️ Pause';
+            document.body.classList.remove('simulation-paused');
+
+            runSimulationLoop();
+
+        } catch (error) {
+            console.error("Error during simulation:", error);
+            ui.resultDiv.innerHTML = "⚠️ An error occurred during simulation.";
+            ui.imgElement.style.opacity = 1;
+            stopSimulation();
+        }
+    }
         
         async function runSimulationLoop() {
             if (!simulationRunning) return;
@@ -375,7 +498,8 @@
                 currentStep++;
 
                 const speedSlider = document.getElementById('speed-slider');
-                let delay = parseInt(speedSlider.max) + parseInt(speedSlider.min) - parseInt(speedSlider.value);
+                let delay = 200;
+                if(speedSlider) delay = parseInt(speedSlider.max) + parseInt(speedSlider.min) - parseInt(speedSlider.value);
 
                 simulationTimeout = setTimeout(runSimulationLoop, delay);
             } else {
@@ -416,67 +540,109 @@
             simulationData = null;
             
             const ui = getUIElements();
-            if(ui.controlsDiv) ui.controlsDiv.style.display = 'none';
+            if(ui && ui.controlsDiv) ui.controlsDiv.style.display = 'none';
             
             document.body.classList.remove('simulation-active');
             document.body.classList.remove('simulation-paused');
         }
         
-        async function visualizeStep(step_data) {
-            const n = parseInt(document.getElementById('nodes').value);
-            const edges = selectedEdges.map(e => e.split('-').map(Number));
-            const ui = getUIElements();
-            
-            let coloring = step_data;
-            let domains = null;
+async function visualizeStep(step_data) {
+        const n = parseInt(document.getElementById('nodes').value);
+        const edges = selectedEdges.map(e => e.split('-').map(Number));
+        const ui = getUIElements();
+        
+        let coloring = step_data;
+        let domains = null;
 
-            if (Array.isArray(step_data) && step_data.length === 2 && Array.isArray(step_data[0])) {
-                coloring = step_data[0];
-                domains = step_data[1];
-            } 
-            
-            try {
-                const stepRes = await axios.post('/step_image', { 
-                    nodes: n, 
-                    edges: edges, 
-                    coloring: coloring, 
-                    node_domains: domains 
-                });
+        // التعديل الهام: قراءة الدومين بشكل صحيح
+        // الـ Optimized بيرجع [assignment, domains]
+        if (Array.isArray(step_data) && step_data.length === 2) {
+            coloring = step_data[0];
+            domains = step_data[1]; // ده الـ Dictionary بتاع الدومين
+        } 
+        
+        try {
+            const stepRes = await axios.post('/step_image', { 
+                nodes: n, 
+                edges: edges, 
+                coloring: coloring, 
+                node_domains: domains,
+                step_number: currentStep + 1  
+            });
 
-                return new Promise((resolve) => {
-                    const tempImg = new Image();
-                    tempImg.onload = () => {
-                        ui.imgElement.src = tempImg.src;
-                        ui.imgElement.style.opacity = 1;
-                        resolve();
-                    };
-                    tempImg.src = "data:image/png;base64," + stepRes.data.image;
-                });
+            return new Promise((resolve) => {
+                const tempImg = new Image();
+                tempImg.onload = () => {
+                    ui.imgElement.src = tempImg.src;
+                    ui.imgElement.style.opacity = 1;
+                    resolve();
+                };
+                tempImg.src = "data:image/png;base64," + stepRes.data.image;
+            });
 
-            } catch (err) {
-                console.error("Step visualization failed", err);
-            }
+        } catch (err) {
+            console.error("Step visualization failed", err);
         }
+    }
 
         function displayFinalResult(data) {
             const ui = getUIElements();
+            
+            // التحقق من الفشل: إذا كانت المصفوفة كلها -1 أو يوجد تضارب
+            const isBacktrackingFailure = data.solution.every(c => c === -1);
+            const hasConflicts = data.conflicts > 0;
+            const isSuccess = !hasConflicts && !isBacktrackingFailure;
+            
+            let statusBadge = '';
+            let boxClass = 'result-box';
+            let solutionHTML = '';
+
+            if (isSuccess) {
+                statusBadge = '<span class="status-badge status-success">✨ Optimal Solution</span>';
+                
+                // --- التعديل: تلوين الأرقام فقط داخل القوسين ---
+                const coloredNumbers = data.solution.map(colorIndex => {
+                    if(colorIndex === -1) return -1;
+                    const color = COLOR_MAP[colorIndex % COLOR_MAP.length];
+                    return `<span style="color:${color}; font-weight:bold; text-shadow: 0 0 5px ${color}; font-size: 1.1em;">${colorIndex}</span>`;
+                }).join(', ');
+                
+                solutionHTML = `[${coloredNumbers}]`;
+
+            } else {
+                statusBadge = '<span class="status-badge status-fail">⛔ No Solution / Conflicts Found</span>';
+                boxClass += ' failure';
+                solutionHTML = '<span style="color: #ff8e8e; font-weight: bold;">(No Solution)</span>';
+            }
+
+            ui.resultDiv.className = boxClass;
             ui.resultDiv.innerHTML = `
                 <div style="width: 100%;">
-                    <span class="result-item" style="animation-delay: 0s;"><span>🧩 Final Solution:</span> <b>[${data.solution.join(', ')}]</b></span>
+                    ${statusBadge}<br>
+                    <span class="result-item" style="animation-delay: 0s;"><span>🧩 Solution Index:</span> <b>${solutionHTML}</b></span>
                     <span class="result-item" style="animation-delay: 0.2s;"><span>💥 Conflicts:</span> <b>${data.conflicts}</b></span>
-                    <span class="result-item" style="animation-delay: 0.4s;"><span>🌈 Chromatic Number:</span> <b>${data.chromatic_number}</b></span>
-                    <span class="result-item" style="animation-delay: 0.6s;"><span>⏱️ Time Taken:</span> <b>${data.time.toFixed(4)} sec</b></span>
+                    <span class="result-item" style="animation-delay: 0.4s;"><span>🌈 Choromatic Number:</span> <b>${isSuccess ? data.chromatic_number : '0'}</b></span>
+                    <span class="result-item" style="animation-delay: 0.6s;"><span>⏱️ Time Taken:</span> <b>${data.time.toFixed(5)} sec</b></span>
                 </div>
             `;
             
             const n = parseInt(document.getElementById('nodes').value);
             const edges = selectedEdges.map(e => e.split('-').map(Number));
             
+            let displayColoring;
+            if (isBacktrackingFailure) {
+                displayColoring = Array(n).fill(-1);
+            } else {
+                displayColoring = data.solution;
+            }
+
+            // رسم الصورة النهائية، مع إرسال رقم الخطوة النهائية
             axios.post('/step_image', { 
                 nodes: n, 
                 edges: edges, 
-                coloring: data.solution,
-                node_domains: null
+                coloring: displayColoring,
+                node_domains: null,
+                step_number: data.steps ? data.steps.length : 0 
             }).then(finalStepRes => {
                 const tempImg = new Image();
                 tempImg.onload = () => {

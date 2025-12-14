@@ -20,6 +20,7 @@ def dfs_order(graph, start):
     dfs(start)
     return order
 
+# steps --> take number of colors
 def backtracking_colouring_core(graph, m, steps):
     n = len(graph)
     order = dfs_order(graph, 0)
@@ -36,6 +37,7 @@ def backtracking_colouring_core(graph, m, steps):
                 assignment[node] = colour
                 steps.append(assignment.copy())
 
+                #Recursion
                 if solve(idx + 1):
                     return True
 
@@ -49,8 +51,32 @@ def backtracking_colouring_core(graph, m, steps):
     else:
         return None
 
+# Minimize colors
+# Try solve one color , 2 colors
+def force_assign_with_conflicts(graph, m, steps):
+    n = len(graph)
+    assignment = [-1] * n
+    for node in range(n):
+        best_color = 0
+        min_conflicts = float('inf')
+        
+        for color in range(m):
+            current_conflicts = 0
+            for neighbor in range(n):
+                if graph[node][neighbor] == 1 and assignment[neighbor] == color:
+                    current_conflicts += 1
+            
+            if current_conflicts < min_conflicts:
+                min_conflicts = current_conflicts
+                best_color = color
+        
+        assignment[node] = best_color
+        steps.append(assignment.copy()) 
+    
+    return assignment
+
 def find_optimal_backtracking(graph, max_colours):
-    start_time = time.time()
+    start_time = time.perf_counter()
     best_solution = None
     all_steps = []
 
@@ -58,10 +84,14 @@ def find_optimal_backtracking(graph, max_colours):
         current_steps = []
         solution = backtracking_colouring_core(graph, m, current_steps)
         if solution is not None:
-            best_solution = solution
             all_steps.extend(current_steps)
-            end_time = time.time()
-            return best_solution, end_time - start_time, m, all_steps
-
-    end_time = time.time()
-    return None, end_time - start_time, max_colours, all_steps
+            end_time = time.perf_counter()
+            return solution, end_time - start_time, m, all_steps
+        else:
+            all_steps.extend(current_steps)
+    forced_steps = []
+    best_solution = force_assign_with_conflicts(graph, max_colours, forced_steps)
+    all_steps.extend(forced_steps)
+    
+    end_time = time.perf_counter()
+    return best_solution, end_time - start_time, max_colours, all_steps
