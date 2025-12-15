@@ -270,7 +270,6 @@
         let simulationTimeout = null;
         let isSecondaryRun = false;
         
-        // خريطة الألوان مطابقة للبايثون
         const COLOR_MAP = ["#DA42A2", "#60CF60", "#4A6EB8", '#FFFF00', '#800080', '#FFA500', '#00FFFF', '#FF00FF', '#00FF00', '#FF0000', '#A52A2A', '#FFC0CB'];
 
         function updateEdges() {
@@ -304,7 +303,6 @@
             const buttons = document.querySelectorAll('.edge-btn');
             let allSelected = true;
             
-            // التحقق مما إذا كان الكل محدد بالفعل
             buttons.forEach(btn => {
                 if (!btn.classList.contains('selected')) allSelected = false;
             });
@@ -312,11 +310,9 @@
             buttons.forEach(btn => {
                 const edge = btn.dataset.edge;
                 if (allSelected) {
-                    // إلغاء تحديد الكل
                     btn.classList.remove('selected');
                     selectedEdges = [];
                 } else {
-                    // تحديد الكل
                     if (!btn.classList.contains('selected')) {
                         btn.classList.add('selected');
                         if (!selectedEdges.includes(edge)) selectedEdges.push(edge);
@@ -554,11 +550,9 @@ async function visualizeStep(step_data) {
         let coloring = step_data;
         let domains = null;
 
-        // التعديل الهام: قراءة الدومين بشكل صحيح
-        // الـ Optimized بيرجع [assignment, domains]
         if (Array.isArray(step_data) && step_data.length === 2) {
             coloring = step_data[0];
-            domains = step_data[1]; // ده الـ Dictionary بتاع الدومين
+            domains = step_data[1]; 
         } 
         
         try {
@@ -588,7 +582,6 @@ async function visualizeStep(step_data) {
         function displayFinalResult(data) {
             const ui = getUIElements();
             
-            // التحقق من الفشل: إذا كانت المصفوفة كلها -1 أو يوجد تضارب
             const isBacktrackingFailure = data.solution.every(c => c === -1);
             const hasConflicts = data.conflicts > 0;
             const isSuccess = !hasConflicts && !isBacktrackingFailure;
@@ -600,7 +593,6 @@ async function visualizeStep(step_data) {
             if (isSuccess) {
                 statusBadge = '<span class="status-badge status-success">✨ Optimal Solution</span>';
                 
-                // --- التعديل: تلوين الأرقام فقط داخل القوسين ---
                 const coloredNumbers = data.solution.map(colorIndex => {
                     if(colorIndex === -1) return -1;
                     const color = COLOR_MAP[colorIndex % COLOR_MAP.length];
@@ -622,7 +614,6 @@ async function visualizeStep(step_data) {
                     <span class="result-item" style="animation-delay: 0s;"><span>🧩 Solution Index:</span> <b>${solutionHTML}</b></span>
                     <span class="result-item" style="animation-delay: 0.2s;"><span>💥 Conflicts:</span> <b>${data.conflicts}</b></span>
                     <span class="result-item" style="animation-delay: 0.4s;"><span>🌈 Choromatic Number:</span> <b>${isSuccess ? data.chromatic_number : '0'}</b></span>
-                    <span class="result-item" style="animation-delay: 0.6s;"><span>⏱️ Time Taken:</span> <b>${data.time.toFixed(5)} sec</b></span>
                 </div>
             `;
             
@@ -630,13 +621,12 @@ async function visualizeStep(step_data) {
             const edges = selectedEdges.map(e => e.split('-').map(Number));
             
             let displayColoring;
-            if (isBacktrackingFailure) {
+            if (!isSuccess) {
                 displayColoring = Array(n).fill(-1);
             } else {
                 displayColoring = data.solution;
             }
 
-            // رسم الصورة النهائية، مع إرسال رقم الخطوة النهائية
             axios.post('/step_image', { 
                 nodes: n, 
                 edges: edges, 

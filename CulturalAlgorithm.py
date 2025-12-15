@@ -104,7 +104,6 @@
 
         
 #         return self.situational_knowledge, final_conflicts, exec_time, steps_history
-
 import random
 import time
 
@@ -119,94 +118,126 @@ class CulturalAlgorithm:
         self.max_colours = max_colours
         self.n = len(graph)
 
-        # ---- Belief Space ----
-        self.situational_knowledge = None   # best solution
+        self.situational_knowledge = None
         self.normative_knowledge = {
             i: set(range(max_colours)) for i in range(self.n)
         }
 
-    # ---------------- Fitness ----------------
     def fitness(self, individual):
         conflicts = 0
         for i in range(self.n):
+            if individual[i] < 0 or individual[i] >= self.max_colours:
+                conflicts += 5
+                continue
             for j in range(i + 1, self.n):
+                if individual[j] < 0 or individual[j] >= self.max_colours:
+                    continue
                 if self.graph[i][j] == 1 and individual[i] == individual[j]:
                     conflicts += 1
 
-        used_colors = len(set(individual))
+        used_colors = len(set(c for c in individual if 0 <= c < self.max_colours))
+        # High penalty for conflicts, small penalty for number of colors
         return conflicts * 1000 + used_colors
 
-    # ---------------- Create Individual (Belief-guided) ----------------
     def create_individual(self):
         individual = []
         for i in range(self.n):
-            domain = self.normative_knowledge[i]
-            individual.append(random.choice(list(domain)))
+            domain = list(self.normative_knowledge[i])
+            valid_domain = [c for c in domain if c < self.max_colours]
+            
+            if not valid_domain:
+                valid_domain = list(range(self.max_colours))
+            
+            individual.append(random.choice(valid_domain))
         return individual
 
-    # ---------------- Update Belief Space ----------------
-    def update_belief_space(self, best_individual):
-        self.situational_knowledge = best_individual[:]
-
+    def update_belief_space(self, best):
+        self.situational_knowledge = best[:]
         for i in range(self.n):
-            self.normative_knowledge[i].add(best_individual[i])
+            if 0 <= best[i] < self.max_colours:
+                self.normative_knowledge[i].add(best[i])
 
-    # ---------------- Genetic Ops ----------------
     def mutate(self, individual):
         if random.random() < self.mutation_rate:
-            idx = random.randint(0, self.n - 1)
-            individual[idx] = random.randint(0, self.max_colours - 1)
+            i = random.randint(0, self.n - 1)
+            individual[i] = random.randint(0, self.max_colours - 1)
         return individual
 
     def crossover(self, p1, p2):
-        point = random.randint(1, self.n - 1)
-        return p1[:point] + p2[point:]
+        cut = random.randint(1, self.n - 1)
+        return p1[:cut] + p2[cut:]
 
-    # ---------------- Reduce Colors ----------------
+    def repair(self, individual):
+        for i in range(self.n):
+            if individual[i] >= self.max_colours or individual[i] < 0:
+                individual[i] = random.randint(0, self.max_colours - 1)
+        return individual
+
     def reduce_colors(self):
         self.max_colours -= 1
         for i in range(self.n):
             self.normative_knowledge[i] = {
-                c for c in self.normative_knowledge[i]
-                if c < self.max_colours
+                c for c in self.normative_knowledge[i] if c < self.max_colours
             }
+        
+        if self.situational_knowledge:
+            self.situational_knowledge = self.repair(self.situational_knowledge[:])
 
-    # ---------------- Evolution ----------------
     def evolve(self):
         start = time.perf_counter()
         population = [self.create_individual() for _ in range(self.population_size)]
         steps = []
-
-        best_fitness = float('inf')
-
+        
+        # Variable to store the best VALID solution found (0 conflicts)
+        best_valid_solution = None
+        
+        # Loop mainly controls the effort, logic inside handles color reduction
         for gen in range(self.generations):
             population.sort(key=self.fitness)
             best = population[0]
             fit = self.fitness(best)
 
             steps.append((best[:], fit))
-
-            if fit < best_fitness:
-                best_fitness = fit
-                self.update_belief_space(best)
-
-            if fit < 1000 and self.max_colours > 1:
-                self.reduce_colors()
-                population = [self.create_individual() for _ in range(self.population_size)]
-                continue
-
-            new_pop = [best[:]]
+            self.update_belief_space(best)
+            
+            # Check if current best is a valid solution (0 conflicts)
+            if fit < 1000:
+                # Save this solution as a backup because it's valid
+                best_valid_solution = best[:]
+                
+                # If we have more than 1 color, try to optimize further by reducing colors
+                if self.max_colours > 1:
+                    self.reduce_colors()
+                    # Re-initialize population to explore the new constrained space
+                    population = [self.create_individual() for _ in range(self.population_size)]
+                    continue # Skip to next generation with new color settings
+            
+            # Standard Genetic Algorithm Operations
+            new_pop = [best[:]] # Elitism: keep the best
             top = population[:max(1, self.population_size // 2)]
 
             while len(new_pop) < self.population_size:
                 p1, p2 = random.sample(top, 2)
                 child = self.crossover(p1, p2)
                 child = self.mutate(child)
+                child = self.repair(child)
                 new_pop.append(child)
 
             population = new_pop
 
         exec_time = time.perf_counter() - start
-        final_conflicts = self.fitness(self.situational_knowledge) // 1000
-
-        return self.situational_knowledge, final_conflicts, exec_time, steps
+        
+        # Final Decision Logic
+        current_best = population[0]
+        current_conflicts = self.fitness(current_best) // 1000
+        
+        if current_conflicts == 0:
+            # If the current state is valid (e.g., successfully reduced to 2 colors), return it
+            return current_best, 0, exec_time, steps
+        elif best_valid_solution is not None:
+            # If current state failed (e.g., 2 colors caused conflicts), 
+            # BUT we had a previous valid solution (e.g., 3 colors), REVERT to that.
+            return best_valid_solution, 0, exec_time, steps
+        else:
+            # If we never found any valid solution, return the best effort
+            return current_best, current_conflicts, exec_time, steps
